@@ -1,0 +1,161 @@
+// ==UserScript==
+// @name         Instagram Image Fetcher with Save All (Updated Regex)
+// @namespace    http://tampermonkey.net/
+// @version      1.8
+// @description  Fetch highest resolution images from Instagram posts and display them in a new tab with Save All button, supporting new URL formats
+// @author       Benson Wang
+// @match        *://www.instagram.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Function to check if the URL matches the required patterns
+    function isMatchingUrl(url) {
+        const regex1 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/p/{shortcode}/
+        const regex2 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/
+        const regex3 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)\/\?img_index=\d+$/; // Matches https://www.instagram.com/p/{shortcode}/?img_index={數字}
+        const regex4 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)\/\?img_index=\d+$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/?img_index={數字}
+        
+        return regex1.test(url) || regex2.test(url) || regex3.test(url) || regex4.test(url);
+    }
+
+    // Function to fetch JSON data for the post using the shortcode
+    async function fetchInstagramData(shortcode) {
+        const apiUrl = `https://www.instagram.com/p/${shortcode}/?__a=1&__d=dis`;
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error('Failed to fetch Instagram data');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            alert('Error fetching Instagram data: ' + error.message);
+            return null;
+        }
+    }
+
+    // Function to extract highest resolution image SRCs from carousel media
+    function extractImageSrcs(data) {
+        const images = [];
+        const carouselMedia = data?.items?.[0]?.carousel_media || [];
+        for (const media of carouselMedia) {
+            const candidates = media.image_versions2.candidates;
+            const highestResImage = candidates.reduce((prev, current) => (prev.width > current.width ? prev : current), candidates[0]);
+            images.push(highestResImage.url);
+        }
+        return images;
+    }
+
+    // Function to create a new tab and display the images with a Save All button
+    function displayImagesInNewTab(imageSrcs, shortcode) {
+        const newTab = window.open();
+        if (!newTab) {
+            alert('Unable to open a new window/tab. Please allow popups.');
+            return;
+        }
+        const doc = newTab.document;
+
+        // Write basic HTML structure using DOM manipulation
+        doc.open();
+        const html = `
+            <html>
+            <head><title>Instagram Images</title></head>
+            <body style="text-align: center; font-family: Arial, sans-serif;">
+                <h1>Instagram Images</h1>
+                <button id="saveAllButton" style="
+                    display: inline-block;
+                    margin: 10px;
+                    padding: 10px;
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 16px;">
+                    Save All
+                </button>
+                <div id="imageContainer"></div>
+            </body>
+            </html>
+        `;
+        doc.write(html);
+        doc.close();
+
+        // Insert images into the new tab
+        const imageContainer = newTab.document.getElementById('imageContainer');
+        imageSrcs.forEach(src => {
+            const img = newTab.document.createElement('img');
+            img.src = src;
+            img.style.display = 'block';
+            img.style.margin = '10px auto';
+            img.style.maxWidth = '90%';
+            img.style.border = '1px solid #ddd';
+            img.style.padding = '10px';
+            imageContainer.appendChild(img);
+        });
+
+        // Add Save All button functionality after content has loaded
+        newTab.document.getElementById('saveAllButton').addEventListener('click', async function() {
+            for (let i = 0; i < imageSrcs.length; i++) {
+                const src = imageSrcs[i];
+
+                // Using Blob to fetch and download the image
+                try {
+                    const response = await fetch(src);
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+
+                    const a = newTab.document.createElement('a');
+                    a.href = url;
+                    a.download = `${shortcode}_${i + 1}.jpg`;  // Use shortcode in the filename
+                    a.click();
+
+                    // Revoke the object URL after the download starts to free up memory
+                    URL.revokeObjectURL(url);
+                } catch (err) {
+                    alert('Error downloading image: ' + err.message);
+                }
+
+                // Adding delay between downloads to avoid being blocked
+                await new Promise(resolve => setTimeout(resolve, 1000));  // 1-second delay between downloads
+            }
+        });
+    }
+
+    // Main function to handle key press and trigger image fetching
+    function handleKeyPress(event) {
+        if (event.ctrlKey && event.shiftKey && event.key === 'Y') {
+            const currentUrl = window.location.href;
+
+            if (!isMatchingUrl(currentUrl)) {
+                alert('The URL does not match the expected Instagram post format.');
+                return;
+            }
+
+            // Extract shortcode from the URL
+            const match = currentUrl.match(/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?/);
+            const shortcode = match ? match[1] : null;
+
+            if (shortcode) {
+                // Fetch the JSON data and open images in new tab
+                fetchInstagramData(shortcode).then(data => {
+                    if (data) {
+                        const imageSrcs = extractImageSrcs(data);
+                        if (imageSrcs.length > 0) {
+                            displayImagesInNewTab(imageSrcs, shortcode);  // Pass shortcode to use in filenames
+                        } else {
+                            alert('No images found in the carousel media.');
+                        }
+                    }
+                });
+            } else {
+                alert('Shortcode not found in the URL.');
+            }
+        }
+    }
+
+    // Add event listener for key press
+    window.addEventListener('keydown', handleKeyPress);
+})();
