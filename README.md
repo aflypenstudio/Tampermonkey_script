@@ -9,8 +9,10 @@ https://www.instagram.com/p/C54pX3FPbyV/?img_index=1
 
 PS.圖片下載都高解析度哦~
 ----
-不支援post中只有一張的照片一載
+不支援
+post中只有一張的照片一載
 這個前輩們做的很好了，請用他們寫好的就可以了
+
 ----
 Automatically capture pictures from instagram continuously
 1. For browsers such as firefox/chrome/edge, please install the tempermonkey plug-in
@@ -23,5 +25,6 @@ Press Save All to automatically download the picture
 
 PS. The pictures can be downloaded in high resolution~
 ----
-It does not support uploading of only one photo in a post.
-The seniors have done a great job, please use their scrpts.
+Not Support
+It does not support downloading of only one photo in a post.
+The seniors have provide great scripts in tempermonkey, please use their scrpts.
