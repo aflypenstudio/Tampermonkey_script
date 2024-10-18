@@ -7,6 +7,9 @@
 // @match        *://www.instagram.com/*
 // @grant        none
 // ==/UserScript==
+// Suggestion: Chrome + Tempermonkey
+// Firefox + Greasemonkey not work.
+
 
 (function() {
     'use strict';
