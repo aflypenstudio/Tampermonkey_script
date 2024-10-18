@@ -9,7 +9,7 @@
 // ==/UserScript==
 // Suggestion: Chrome + Tempermonkey
 // Firefox + Greasemonkey not work.
-
+// Automatic Download all images in the post with the high resolution image.
 
 (function() {
     'use strict';
