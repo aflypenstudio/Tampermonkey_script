@@ -1,25 +1,22 @@
 // ==UserScript==
-// @name         Instagram Image Fetcher with Save All (Updated Regex for All Formats)
+// @name         Instagram Image Fetcher with Save All (Updated Regex with hl Parameter)
 // @namespace    http://tampermonkey.net/
-// @version      2.0
-// @description  Fetch highest resolution images from Instagram posts and display them in a new tab with Save All button, supporting new URL formats including img_index and hl parameter.
-// @author       You
+// @version      1.9
+// @description  Fetch highest resolution images from Instagram posts and display them in a new tab with Save All button, supporting more URL formats
+// @author       Benson Wang
 // @match        *://www.instagram.com/*
 // @grant        none
 // ==/UserScript==
-// Recommondation: Chrome + Tempermonkey / Firefox + Tempermonkey
-// Greasemonkey not work.
-// Automatic Download all images in the post with the high resolution image.
 
 (function() {
     'use strict';
 
     // Function to check if the URL matches the required patterns
     function isMatchingUrl(url) {
-        const regex1 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/p/{shortcode}/ or ?img_index
-        const regex2 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/ or ?img_index
-        const regex3 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)\/\?hl=[a-zA-Z&=]{2,6}&img_index=\d+$/; // Matches https://www.instagram.com/p/{shortcode}/?hl={2-6 characters}&img_index
-        const regex4 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)\/\?hl=[a-zA-Z&=]{2,6}&img_index=\d+$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/?hl={2-6 characters}&img_index
+        const regex1 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/p/{shortcode}/
+        const regex2 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)(\/|\?img_index=\d+)?$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/
+        const regex3 = /^https:\/\/www\.instagram\.com\/p\/([a-zA-Z0-9_-]+)\/\?hl=[a-zA-Z&=]{2,6}&img_index=\d+$/; // Matches https://www.instagram.com/p/{shortcode}/?hl={2-6 characters}&img_index=數字
+        const regex4 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)\/\?hl=[a-zA-Z&=]{2,6}&img_index=\d+$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/?hl={2-6 characters}&img_index=數字
         const regex5 = /^https:\/\/www\.instagram\.com\/[a-zA-Z0-9_.-]+\/p\/([a-zA-Z0-9_-]+)\/\?img_index=\d+$/; // Matches https://www.instagram.com/{USERNAME}/p/{shortcode}/?img_index=1
 
         return regex1.test(url) || regex2.test(url) || regex3.test(url) || regex4.test(url) || regex5.test(url);
